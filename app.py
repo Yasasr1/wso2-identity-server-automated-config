@@ -9,7 +9,7 @@ dcr_client_id = "oidc_test_clientid001"
 dcr_client_secret = "oidc_test_client_secret001"
 applications_url = "https://localhost:9443/api/server/v1/applications"
 scopes = "internal_user_mgt_update internal_application_mgt_create internal_application_mgt_view internal_login " \
-         "internal_claim_meta_update "
+         "internal_claim_meta_update internal_application_mgt_update"
 
 dcr_headers = {'Content-Type': 'application/json', 'Connection': 'keep-alive',
                'Authorization': 'Basic YWRtaW46YWRtaW4='}
@@ -60,7 +60,7 @@ def get_service_provider_details(application_id):
     }
     response = json.loads(requests.get(url=applications_url + "/" + application_id + "/inbound-protocols/oidc",
                                        headers=headers, verify=False).content)
-    return {"clientId": response['clientId'], "clientSecret": response['clientSecret']}
+    return {"clientId": response['clientId'], "clientSecret": response['clientSecret'], "applicationId": application_id}
 
 
 def register_service_provider(name, callback_url):
@@ -142,6 +142,12 @@ def set_user_claim_values():
                 "op": "replace",
                 "value": {
                     "profileUrl": "newUrl"
+                }
+            },
+            {
+                "op": "replace",
+                "value": {
+                    "locale": "locale"
                 }
             },
             {
@@ -259,11 +265,222 @@ def change_local_claim_mapping(body, url):
     print(response.text)
 
 
+def add_claim_service_provider(application_id):
+    headers = {
+        'Content-Type': 'application/json',
+        'Connection': 'keep-alive',
+        'Authorization': 'Bearer ' + access_token
+    }
+
+    body = {
+        "claimConfiguration": {
+            "dialect": "LOCAL",
+            "requestedClaims": [
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/emailaddress"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/identity/emailVerified"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/mobile"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/identity/phoneVerified"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/addresses"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/fullname"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/givenname"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/lastname"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/middleName"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/nickname"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/url"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/photourl"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/url"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/gender"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/dob"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/timeZone"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/local"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/displayName"
+                    },
+                    "mandatory": True
+                },
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/modified"
+                    },
+                    "mandatory": True
+                }
+            ],
+            "role": {
+                "claim": {
+                    "uri": "http://wso2.org/claims/role"
+                },
+                "includeUserDomain": True
+            },
+            "subject": {
+                "claim": {
+                    "uri": "http://wso2.org/claims/username"
+                },
+                "includeTenantDomain": False,
+                "includeUserDomain": False,
+                "useMappedLocalSubject": False
+            }
+        }
+    }
+
+    json_body = json.dumps(body)
+    response = requests.patch(url=applications_url + "/" + application_id, headers=headers, data=json_body,
+                              verify=False)
+    print(response.status_code)
+    print(response.text)
+
+
+def configure_acr(application_id):
+    headers = {
+        'Content-Type': 'application/json',
+        'Connection': 'keep-alive',
+        'Authorization': 'Bearer ' + access_token
+    }
+
+    body = {
+        "authenticationSequence": {
+            "attributeStepId": 1,
+            "steps": [
+                {
+                    "id": 1,
+                    "options": [
+                        {
+                            "authenticator": "BasicAuthenticator",
+                            "idp": "LOCAL"
+                        }
+                    ]
+                },
+                {
+                    "id": 2,
+                    "options": [
+                        {
+                            "authenticator": "BasicAuthenticator",
+                            "idp": "LOCAL"
+                        }
+                    ]
+                },
+                {
+                    "id": 3,
+                    "options": [
+                        {
+                            "authenticator": "BasicAuthenticator",
+                            "idp": "LOCAL"
+                        }
+                    ]
+                }
+            ],
+            "subjectStepId": 1,
+            "type": "USER_DEFINED",
+            "script": "// Define conditional authentication by passing one or many Authentication Context Class "
+                      "References \n// as comma separated values.\n\n// Specify the ordered list of ACR "
+                      "here.\nvar supportedAcrValues = ['acr1', 'acr2', 'acr3'];\n\nvar onLoginRequest = function("
+                      "context) {\n    var selectedAcr = selectAcrFrom(context, supportedAcrValues);\n    Log.info("
+                      "'--------------- ACR selected: ' + selectedAcr);\n    context.selectedAcr = selectedAcr;\n   "
+                      " switch (selectedAcr) {\n        case supportedAcrValues[0] :\n            executeStep("
+                      "1);\n            break;\n        case supportedAcrValues[1] :\n            executeStep("
+                      "1);\n            executeStep(2);\n            break;\n        case supportedAcrValues[2] "
+                      ":\n            executeStep(1);\n            executeStep(3);\n            break;\n        "
+                      "default :\n            executeStep(1);\n            executeStep(2);\n            "
+                      "executeStep(3);\n    }\n};"
+        }
+    }
+    json_body = json.dumps(body)
+    response = requests.patch(url=applications_url + "/" + application_id, headers=headers, data=json_body,
+                              verify=False)
+    print(response.status_code)
+    print(response.text)
+
+
 dcr(dcr_headers, json.dumps(dcr_body), dcr_url)
 
 access_token = get_access_token(dcr_client_id, dcr_client_secret, scopes, token_url)
 
-service_provider = register_service_provider("test", "https://localhost.emobix.co.uk:8443/test/a/yasas/callback")
+service_provider = register_service_provider("conformance", "https://localhost.emobix.co.uk:8443/test/a/yasas/callback")
 
 print(service_provider)
 
@@ -274,3 +491,7 @@ change_local_claim_mapping({
     "claimURI": "phone_number",
     "mappedLocalClaimURI": "http://wso2.org/claims/mobile"
 }, "https://localhost:9443/api/server/v1/claim-dialects/aHR0cDovL3dzbzIub3JnL29pZGMvY2xhaW0/claims/cGhvbmVfbnVtYmVy")
+
+add_claim_service_provider(service_provider['applicationId'])
+
+configure_acr(service_provider['applicationId'])
