@@ -9,7 +9,7 @@ dcr_client_id = "oidc_test_clientid001"
 dcr_client_secret = "oidc_test_client_secret001"
 applications_url = "https://localhost:9443/api/server/v1/applications"
 scopes = "internal_user_mgt_update internal_application_mgt_create internal_application_mgt_view internal_login " \
-         "internal_claim_meta_update internal_application_mgt_update"
+         "internal_claim_meta_update internal_application_mgt_update internal_scope_mgt_create"
 
 dcr_headers = {'Content-Type': 'application/json', 'Connection': 'keep-alive',
                'Authorization': 'Basic YWRtaW46YWRtaW4='}
@@ -111,7 +111,7 @@ def register_service_provider(name, callback_url):
 
     json_body = json.dumps(body)
     response = requests.post(url=applications_url, headers=headers, data=json_body, verify=False)
-    if json.loads(response.content)['code'] == "APP-65001":
+    if response.content and json.loads(response.content)['code'] == "APP-65001":
         print("Application already registered, getting details")
     else:
         print("Service provider " + name + " registered")
@@ -197,7 +197,8 @@ def set_user_claim_values():
                             "value": "female"
                         },
                         "phoneVerified": "true",
-                        "dateOfBirth": "1997-11-26T05:09:15.680889Z"
+                        "dateOfBirth": "1997-11-26T05:09:15.680889Z",
+                        "organization": "organization2"
                     }
                 }
             },
@@ -276,6 +277,12 @@ def add_claim_service_provider(application_id):
         "claimConfiguration": {
             "dialect": "LOCAL",
             "requestedClaims": [
+                {
+                    "claim": {
+                        "uri": "http://wso2.org/claims/organization"
+                    },
+                    "mandatory": True
+                },
                 {
                     "claim": {
                         "uri": "http://wso2.org/claims/emailaddress"
@@ -476,22 +483,54 @@ def configure_acr(application_id):
     print(response.text)
 
 
+def edit_scope(scope_id, body):
+    headers = {
+        'Content-Type': 'application/json',
+        'Connection': 'keep-alive',
+        'Authorization': 'Bearer ' + access_token
+    }
+
+    json_body = json.dumps(body)
+    response = requests.put(url="https://localhost:9443/api/server/v1/oidc/scopes/" + scope_id, headers=headers,
+                            data=json_body, verify=False)
+    print(response.status_code)
+    print(response.text)
+
+
 dcr(dcr_headers, json.dumps(dcr_body), dcr_url)
 
 access_token = get_access_token(dcr_client_id, dcr_client_secret, scopes, token_url)
 
-service_provider = register_service_provider("conformance", "https://localhost.emobix.co.uk:8443/test/a/yasas/callback")
+service_provider = register_service_provider("test7", "https://localhost.emobix.co.uk:8443/test/a/yasas/callback")
 
 print(service_provider)
 
 set_user_claim_values()
 
 # change phone number to mobile
-change_local_claim_mapping({
-    "claimURI": "phone_number",
-    "mappedLocalClaimURI": "http://wso2.org/claims/mobile"
-}, "https://localhost:9443/api/server/v1/claim-dialects/aHR0cDovL3dzbzIub3JnL29pZGMvY2xhaW0/claims/cGhvbmVfbnVtYmVy")
+change_local_claim_mapping(
+    {
+        "claimURI": "phone_number",
+        "mappedLocalClaimURI": "http://wso2.org/claims/mobile"
+    },
+    "https://localhost:9443/api/server/v1/claim-dialects/aHR0cDovL3dzbzIub3JnL29pZGMvY2xhaW0/claims/cGhvbmVfbnVtYmVy")
+
+# change website from url to organization
+change_local_claim_mapping(
+    {
+        "claimURI": "website",
+        "mappedLocalClaimURI": "http://wso2.org/claims/organization"
+    },
+    "https://localhost:9443/api/server/v1/claim-dialects/aHR0cDovL3dzbzIub3JnL29pZGMvY2xhaW0/claims/d2Vic2l0ZQ")
 
 add_claim_service_provider(service_provider['applicationId'])
 
 configure_acr(service_provider['applicationId'])
+
+edit_scope("openid", {
+    "claims": [
+        "sub"
+    ],
+    "description": "",
+    "displayName": "openid"
+})
