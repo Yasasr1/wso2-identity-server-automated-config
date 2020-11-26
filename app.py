@@ -1,13 +1,15 @@
 import requests
 import json
 from urllib.parse import urlencode
+from datetime import datetime
 
 dcr_url = "https://localhost:9443/api/identity/oauth2/dcr/v1.1/register"
 token_url = "https://localhost:9443/oauth2/token"
 dcr_client_id = "oidc_test_clientid001"
 dcr_client_secret = "oidc_test_client_secret001"
 applications_url = "https://localhost:9443/api/server/v1/applications"
-scopes = "internal_user_mgt_update internal_application_mgt_create internal_application_mgt_view"
+scopes = "internal_user_mgt_update internal_application_mgt_create internal_application_mgt_view internal_login " \
+         "internal_claim_meta_update "
 
 dcr_headers = {'Content-Type': 'application/json', 'Connection': 'keep-alive',
                'Authorization': 'Basic YWRtaW46YWRtaW4='}
@@ -109,21 +111,166 @@ def register_service_provider(name, callback_url):
 
     json_body = json.dumps(body)
     response = requests.post(url=applications_url, headers=headers, data=json_body, verify=False)
-    if response.status_code == 201:
-        print("Service provider " + name + " registered")
-        response = requests.get(url=applications_url + "?filter=name+eq+" + name, headers=headers, verify=False)
-        print(response.status_code)
-        response_map = json.loads(response.content)
-        print(response_map)
-        if response_map['count'] == 0:
-            print("error application not found")
-        else:
-            return get_service_provider_details(response_map['applications'][0]['id'])
+    if json.loads(response.content)['code'] == "APP-65001":
+        print("Application already registered, getting details")
     else:
-        print(response.text)
+        print("Service provider " + name + " registered")
+    response = requests.get(url=applications_url + "?filter=name+eq+" + name, headers=headers, verify=False)
+    print(response.status_code)
+    response_map = json.loads(response.content)
+    print(response_map)
+    if response_map['count'] == 0:
+        print("error application not found")
+    else:
+        return get_service_provider_details(response_map['applications'][0]['id'])
+
+
+def set_user_claim_values():
+    headers = {
+        'Content-Type': 'application/json',
+        'Connection': 'keep-alive',
+        'Authorization': 'Bearer ' + access_token
+    }
+
+    # can't update these values -
+    #   telephone - updated claim mapping
+    #   middle name
+
+    body = {
+        "Operations": [
+            {
+                "op": "replace",
+                "value": {
+                    "profileUrl": "newUrl"
+                }
+            },
+            {
+                "op": "replace",
+                "value": {
+                    "photos": [
+                        "photos",
+                        {
+                            "type": "photo",
+                            "value": "photourl"
+                        }
+                    ]
+                }
+            },
+            {
+                "op": "replace",
+                "value": {
+                    "addresses": [
+                        "address"
+                    ]
+                }
+            },
+            {
+                "op": "replace",
+                "value": {
+                    "timezone": "+5:30"
+                }
+            },
+            {
+                "op": "replace",
+                "value": {
+                    "displayName": "displayu name"
+                }
+            },
+            {
+                "op": "replace",
+                "value": {
+                    "nickName": "nicj name"
+                }
+            },
+            {
+                "op": "replace",
+                "value": {
+                    "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
+                        "emailVerified": "true",
+                        "manager": {
+                            "value": "female"
+                        },
+                        "phoneVerified": "true",
+                        "dateOfBirth": "1997-11-26T05:09:15.680889Z"
+                    }
+                }
+            },
+            {
+                "op": "replace",
+                "value": {
+                    "name": {
+                        "givenName": "yasas"
+                    }
+                }
+            },
+            {
+                "op": "replace",
+                "value": {
+                    "name": {
+                        "familyName": "Administrator"
+                    }
+                }
+            },
+            {
+                "op": "replace",
+                "value": {
+                    "emails": [
+                        "admin@wso2.com"
+                    ]
+                }
+            },
+            {
+                "op": "replace",
+                "value": {
+                    "phoneNumbers": [
+                        {
+                            "type": "mobile",
+                            "value": "07178394922"
+                        },
+                        {
+                            "type": "home",
+                            "value": "011571"
+                        }
+                    ]
+                }
+            },
+        ],
+        "schemas": [
+            "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+        ]
+    }
+
+    json_body = json.dumps(body)
+    response = requests.patch(url="https://localhost:9443/scim2/Me", headers=headers, data=json_body, verify=False)
+    print(response.status_code)
+    print(response.text)
+
+
+def change_local_claim_mapping(body, url):
+    headers = {
+        'Content-Type': 'application/json',
+        'Connection': 'keep-alive',
+        'Authorization': 'Bearer ' + access_token
+    }
+
+    json_body = json.dumps(body)
+    response = requests.put(url=url, headers=headers, data=json_body, verify=False)
+    print(response.status_code)
+    print(response.text)
 
 
 dcr(dcr_headers, json.dumps(dcr_body), dcr_url)
+
 access_token = get_access_token(dcr_client_id, dcr_client_secret, scopes, token_url)
-service_provider = register_service_provider("test28", "https://localhost.emobix.co.uk:8443/test/a/yasas/callback")
+
+service_provider = register_service_provider("test", "https://localhost.emobix.co.uk:8443/test/a/yasas/callback")
+
 print(service_provider)
+
+set_user_claim_values()
+
+# change phone number to mobile
+change_local_claim_mapping({
+    "claimURI": "phone_number",
+    "mappedLocalClaimURI": "http://wso2.org/claims/mobile"
+}, "https://localhost:9443/api/server/v1/claim-dialects/aHR0cDovL3dzbzIub3JnL29pZGMvY2xhaW0/claims/cGhvbmVfbnVtYmVy")
