@@ -9,10 +9,12 @@ def start(file):
         process = subprocess.Popen("sudo -E docker-compose -f " + file + " up", shell=True, stdout=subprocess.PIPE)
         while True:
             output = process.stdout.readline()
-            if b'Starting application' in output:
+            if b'conformance-suite_server_1 exited with code 1' in output:
+                raise Exception("Conformance suite failed to start")
+            elif b'Starting application' in output:
                 print("Server Started")
                 break
-            if output:
+            elif output:
                 print(output.strip())
         rc = process.poll()
         return rc
