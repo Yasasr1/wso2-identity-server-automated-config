@@ -36,7 +36,7 @@ headers = {
 def dcr():
     print("DCR")
     response = requests.post(url=DCR_ENDPOINT, headers=DCR_HEADERS, data=json.dumps(DCR_BODY), verify=False)
-    print(response.text)
+    print(response.status_code)
 
 
 def get_access_token(client_id, client_secret, scope, url):
@@ -75,7 +75,8 @@ def register_service_provider(name, callback_url):
             "oidc": {
                 "state": "ACTIVE",
                 "grantTypes": [
-                    "authorization_code"
+                    "authorization_code",
+                    "implicit"
                 ],
                 "publicClient": False,
                 "validateRequestObjectSignature": False,
@@ -407,39 +408,18 @@ def configure_acr(application_id):
                             "idp": "LOCAL"
                         }
                     ]
-                },
-                {
-                    "id": 2,
-                    "options": [
-                        {
-                            "authenticator": "BasicAuthenticator",
-                            "idp": "LOCAL"
-                        }
-                    ]
-                },
-                {
-                    "id": 3,
-                    "options": [
-                        {
-                            "authenticator": "BasicAuthenticator",
-                            "idp": "LOCAL"
-                        }
-                    ]
                 }
             ],
             "subjectStepId": 1,
             "type": "USER_DEFINED",
             "script": "// Define conditional authentication by passing one or many Authentication Context Class "
                       "References \n// as comma separated values.\n\n// Specify the ordered list of ACR "
-                      "here.\nvar supportedAcrValues = ['acr1', 'acr2', 'acr3'];\n\nvar onLoginRequest = function("
+                      "here.\nvar supportedAcrValues = ['acr1'];\n\nvar onLoginRequest = function("
                       "context) {\n    var selectedAcr = selectAcrFrom(context, supportedAcrValues);\n    Log.info("
                       "'--------------- ACR selected: ' + selectedAcr);\n    context.selectedAcr = selectedAcr;\n   "
                       " switch (selectedAcr) {\n        case supportedAcrValues[0] :\n            executeStep("
-                      "1);\n            break;\n        case supportedAcrValues[1] :\n            executeStep("
-                      "1);\n            executeStep(2);\n            break;\n        case supportedAcrValues[2] "
-                      ":\n            executeStep(1);\n            executeStep(3);\n            break;\n        "
-                      "default :\n            executeStep(1);\n            executeStep(2);\n            "
-                      "executeStep(3);\n    }\n};"
+                      "1);\n            break;\n        "
+                      "default :\n            executeStep(1);\n    }\n};"
         }
     }
     print("Setup advanced authentication scripts")
