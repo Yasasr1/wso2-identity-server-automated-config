@@ -451,7 +451,7 @@ def unpack_and_run(zip_file_name):
         # start identity server
         print("Starting Server")
         dir_list = os.listdir()
-        r = re.compile('(?=^wso2)(?=^((?!zip).)*$)')
+        r = re.compile('(?=^wso2is)(?=^((?!zip).)*$)')
         for line in dir_list:
             if r.match(line):
                 print(line)
