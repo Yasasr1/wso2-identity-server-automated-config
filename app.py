@@ -705,6 +705,79 @@ def json_config_builder(service_provider_1, service_provider_2):
                         ]
                     }
                 ]
+            },
+            "oidcc-ensure-registered-redirect-uri": {
+                "browser": [
+                    {
+                        "match": "https://localhost:9443/oauth2/authorize*",
+                        "tasks": [
+                            {
+                                "task": "Login",
+                                "match": "https://localhost:9443/authenticationendpoint/login*",
+                                "optional": True,
+                                "commands": [
+                                    [
+                                        "text",
+                                        "id",
+                                        "usernameUserInput",
+                                        "admin"
+                                    ],
+                                    [
+                                        "text",
+                                        "id",
+                                        "password",
+                                        "admin"
+                                    ],
+                                    [
+                                        "click",
+                                        "xpath",
+                                        "/html/body/main/div/div[2]/div/form/div[9]/div[2]/button"
+                                    ],
+                                    [
+                                        "wait",
+                                        "contains",
+                                        "test/callback",
+                                        10
+                                    ]
+                                ]
+                            },
+                            {
+                                "task": "Consent",
+                                "match": "https://localhost:9443/authenticationendpoint/oauth2_consent*",
+                                "optional": True,
+                                "commands": [
+                                    [
+                                        "wait",
+                                        "id",
+                                        "approve",
+                                        10
+                                    ],
+                                    [
+                                        "click",
+                                        "id",
+                                        "rememberApproval",
+                                        "optional"
+                                    ],
+                                    [
+                                        "click",
+                                        "id",
+                                        "approve"
+                                    ],
+                                    [
+                                        "wait",
+                                        "contains",
+                                        "callback",
+                                        10
+                                    ]
+                                ]
+                            },
+                            {
+                                "task": "Verify",
+                                "match": "https://localhost:9443/authenticationendpoint/oauth2_error.do*"
+                            }
+                        ]
+                    }
+                ]
             }
         }
     }
