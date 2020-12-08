@@ -1,3 +1,4 @@
+import re
 import warnings
 import psutil
 import requests
@@ -439,18 +440,26 @@ def edit_scope(scope_id, body):
     print(response.text)
 
 
-def unpack_and_run(zip_file_name, is_directory_name):
+def unpack_and_run(zip_file_name):
     try:
         # extract IS zip
-        if os.path.exists(is_directory_name) is not True:
-            with ZipFile(zip_file_name, 'r') as zip_file:
-                print("Extracting " + zip_file_name)
-                zip_file.extractall()
+        with ZipFile(zip_file_name, 'r') as zip_file:
+            print("Extracting " + zip_file_name)
+            zip_file.extractall()
 
+        dir_name = ''
         # start identity server
         print("Starting Server")
-        os.chmod("./" + is_directory_name + "/bin/wso2server.sh", 0o777)
-        process = subprocess.Popen("./" + is_directory_name + "/bin/wso2server.sh", stdout=subprocess.PIPE)
+        dir_list = os.listdir()
+        r = re.compile('(?=^wso2)(?=^((?!zip).)*$)')
+        for line in dir_list:
+            if r.match(line):
+                print(line)
+                dir_name = line
+                break
+
+        os.chmod("./" + dir_name + "/bin/wso2server.sh", 0o777)
+        process = subprocess.Popen("./" + dir_name + "/bin/wso2server.sh", stdout=subprocess.PIPE)
         while True:
             output = process.stdout.readline()
             if b'..................................' in output:
@@ -809,7 +818,7 @@ def is_process_running(processName):
 warnings.filterwarnings("ignore")
 
 if not is_process_running("wso2server"):
-    unpack_and_run(str(sys.argv[1]), str(sys.argv[2]))
+    unpack_and_run(str(sys.argv[1]))
 else:
     print("IS already running")
 
