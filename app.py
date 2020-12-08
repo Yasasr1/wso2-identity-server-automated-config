@@ -450,7 +450,7 @@ def unpack_and_run(zip_file_name, is_directory_name):
         # start identity server
         print("Starting Server")
         os.chmod("./" + is_directory_name + "/bin/wso2server.sh", 0o777)
-        process = subprocess.Popen("./wso2is-5.11.0/bin/wso2server.sh", stdout=subprocess.PIPE)
+        process = subprocess.Popen("./" + is_directory_name + "/bin/wso2server.sh", stdout=subprocess.PIPE)
         while True:
             output = process.stdout.readline()
             if b'..................................' in output:
@@ -461,7 +461,7 @@ def unpack_and_run(zip_file_name, is_directory_name):
         rc = process.poll()
         return rc
     except FileNotFoundError:
-        print("File " + zip_file_name + " not found")
+        print()
         raise
 
 
@@ -809,7 +809,7 @@ def is_process_running(processName):
 warnings.filterwarnings("ignore")
 
 if not is_process_running("wso2server"):
-    unpack_and_run(str(sys.argv[1]), "wso2is-5.11.0")
+    unpack_and_run(str(sys.argv[1]), str(sys.argv[2]))
 else:
     print("IS already running")
 
