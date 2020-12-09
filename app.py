@@ -77,7 +77,8 @@ def register_service_provider(name, callback_url):
                 "state": "ACTIVE",
                 "grantTypes": [
                     "authorization_code",
-                    "implicit"
+                    "implicit",
+                    "refresh_token"
                 ],
                 "publicClient": False,
                 "validateRequestObjectSignature": False,
@@ -104,7 +105,8 @@ def register_service_provider(name, callback_url):
             "attributeStepId": 1
         },
         "advancedConfigurations": {
-            "discoverableByEndUsers": False
+            "discoverableByEndUsers": False,
+            "skipLoginConsent": True
         },
         "description": "client to be used by OIDC conformance suite.",
         "templateId": "b9c5e11e-fc78-484b-9bec-015d247561b8"
@@ -483,7 +485,7 @@ def json_config_builder(service_provider_1, service_provider_2):
             "authorization_endpoint": "https://localhost:9443/oauth2/authorize",
             "token_endpoint": "https://localhost:9443/oauth2/token",
             "userinfo_endpoint": "https://localhost:9443/oauth2/userinfo",
-            "acr_values": "acr1 acr2 acr3"
+            "acr_values": "acr1"
         },
         "client": {
             "client_id": service_provider_1['clientId'],
@@ -545,18 +547,12 @@ def json_config_builder(service_provider_1, service_provider_2):
                             [
                                 "click",
                                 "id",
-                                "rememberApproval",
-                                "optional"
-                            ],
-                            [
-                                "click",
-                                "id",
                                 "approve"
                             ],
                             [
                                 "wait",
                                 "contains",
-                                "callback",
+                                "test/callback",
                                 10
                             ]
                         ]
@@ -569,79 +565,6 @@ def json_config_builder(service_provider_1, service_provider_2):
             }
         ],
         "override": {
-            "oidcc-server": {
-                "browser": [
-                    {
-                        "match": "https://localhost:9443/oauth2/authorize*",
-                        "tasks": [
-                            {
-                                "task": "Login",
-                                "match": "https://localhost:9443/authenticationendpoint/login*",
-                                "optional": True,
-                                "commands": [
-                                    [
-                                        "text",
-                                        "id",
-                                        "usernameUserInput",
-                                        "admin"
-                                    ],
-                                    [
-                                        "text",
-                                        "id",
-                                        "password",
-                                        "admin"
-                                    ],
-                                    [
-                                        "click",
-                                        "xpath",
-                                        "/html/body/main/div/div[2]/div/form/div[9]/div[2]/button"
-                                    ],
-                                    [
-                                        "wait",
-                                        "contains",
-                                        "oauth2_consent",
-                                        10
-                                    ]
-                                ]
-                            },
-                            {
-                                "task": "Consent",
-                                "match": "https://localhost:9443/authenticationendpoint/oauth2_consent*",
-                                "optional": True,
-                                "commands": [
-                                    [
-                                        "wait",
-                                        "id",
-                                        "approve",
-                                        10
-                                    ],
-                                    [
-                                        "click",
-                                        "id",
-                                        "rememberApproval",
-                                        "optional"
-                                    ],
-                                    [
-                                        "click",
-                                        "id",
-                                        "approve"
-                                    ],
-                                    [
-                                        "wait",
-                                        "contains",
-                                        "callback",
-                                        10
-                                    ]
-                                ]
-                            },
-                            {
-                                "task": "Verify",
-                                "match": "https://localhost.emobix.co.uk:8443/test/a/test/callback*"
-                            }
-                        ]
-                    }
-                ]
-            },
             "oidcc-refresh-token": {
                 "browser": [
                     {
@@ -691,12 +614,6 @@ def json_config_builder(service_provider_1, service_provider_2):
                                     [
                                         "click",
                                         "id",
-                                        "rememberApproval",
-                                        "optional"
-                                    ],
-                                    [
-                                        "click",
-                                        "id",
                                         "approve"
                                     ],
                                     [
@@ -721,67 +638,20 @@ def json_config_builder(service_provider_1, service_provider_2):
                         "match": "https://localhost:9443/oauth2/authorize*",
                         "tasks": [
                             {
-                                "task": "Login",
-                                "match": "https://localhost:9443/authenticationendpoint/login*",
-                                "optional": True,
-                                "commands": [
-                                    [
-                                        "text",
-                                        "id",
-                                        "usernameUserInput",
-                                        "admin"
-                                    ],
-                                    [
-                                        "text",
-                                        "id",
-                                        "password",
-                                        "admin"
-                                    ],
-                                    [
-                                        "click",
-                                        "xpath",
-                                        "/html/body/main/div/div[2]/div/form/div[9]/div[2]/button"
-                                    ],
-                                    [
-                                        "wait",
-                                        "contains",
-                                        "test/callback",
-                                        10
-                                    ]
-                                ]
-                            },
-                            {
-                                "task": "Consent",
-                                "match": "https://localhost:9443/authenticationendpoint/oauth2_consent*",
-                                "optional": True,
-                                "commands": [
-                                    [
-                                        "wait",
-                                        "id",
-                                        "approve",
-                                        10
-                                    ],
-                                    [
-                                        "click",
-                                        "id",
-                                        "rememberApproval",
-                                        "optional"
-                                    ],
-                                    [
-                                        "click",
-                                        "id",
-                                        "approve"
-                                    ],
-                                    [
-                                        "wait",
-                                        "contains",
-                                        "callback",
-                                        10
-                                    ]
-                                ]
-                            },
-                            {
                                 "task": "Verify",
+                                "match": "https://localhost:9443/authenticationendpoint/oauth2_error.do*"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "oidcc-ensure-request-object-with-redirect-uri": {
+                "browser": [
+                    {
+                        "match": "https://localhost:9443/oauth2/authorize*",
+                        "tasks": [
+                            {
+                                "task": "Verify error",
                                 "match": "https://localhost:9443/authenticationendpoint/oauth2_error.do*"
                             }
                         ]
