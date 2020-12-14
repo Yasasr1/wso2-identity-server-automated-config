@@ -638,8 +638,18 @@ def json_config_builder(service_provider_1, service_provider_2):
                         "match": "https://localhost:9443/oauth2/authorize*",
                         "tasks": [
                             {
-                                "task": "Verify",
-                                "match": "https://localhost:9443/authenticationendpoint/oauth2_error.do*"
+                                "task": "Verify error page",
+                                "match": "https://localhost:9443/authenticationendpoint/oauth2_error.do*",
+                                "commands": [
+                                    [
+                                        "wait",
+                                        "xpath",
+                                        "//*",
+                                        10,
+                                        "Identity Server",
+                                        "update-image-placeholder"
+                                    ]
+                                ]
                             }
                         ]
                     }
@@ -652,7 +662,179 @@ def json_config_builder(service_provider_1, service_provider_2):
                         "tasks": [
                             {
                                 "task": "Verify error",
-                                "match": "https://localhost:9443/authenticationendpoint/oauth2_error.do*"
+                                "match": "https://localhost:9443/authenticationendpoint/oauth2_error.do*",
+                                "commands": [
+                                    [
+                                        "wait",
+                                        "xpath",
+                                        "//*",
+                                        10,
+                                        "Identity Server",
+                                        "update-image-placeholder"
+                                    ]
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "oidcc-prompt-login": {
+                "browser": [
+                    {
+                        "match": "https://localhost:9443/oauth2/authorize*",
+                        "tasks": [
+                            {
+                                "task": "Login",
+                                "match": "https://localhost:9443/authenticationendpoint/login*",
+                                "optional": True,
+                                "commands": [
+                                    [
+                                        "wait",
+                                        "xpath",
+                                        "/html/body/main/div/div[2]/h3",
+                                        10,
+                                        "Sign In",
+                                        "update-image-placeholder-optional"
+                                    ],
+                                    [
+                                        "text",
+                                        "id",
+                                        "usernameUserInput",
+                                        "admin"
+                                    ],
+                                    [
+                                        "text",
+                                        "id",
+                                        "password",
+                                        "admin"
+                                    ],
+                                    [
+                                        "click",
+                                        "xpath",
+                                        "/html/body/main/div/div[2]/div/form/div[9]/div[2]/button"
+                                    ],
+                                    [
+                                        "wait",
+                                        "contains",
+                                        "test/callback",
+                                        10
+                                    ]
+                                ]
+                            },
+                            {
+                                "task": "Consent",
+                                "match": "https://localhost:9443/authenticationendpoint/oauth2_consent*",
+                                "optional": True,
+                                "commands": [
+                                    [
+                                        "wait",
+                                        "id",
+                                        "approve",
+                                        10
+                                    ],
+                                    [
+                                        "click",
+                                        "id",
+                                        "rememberApproval",
+                                        "optional"
+                                    ],
+                                    [
+                                        "click",
+                                        "id",
+                                        "approve"
+                                    ],
+                                    [
+                                        "wait",
+                                        "contains",
+                                        "callback",
+                                        10
+                                    ]
+                                ]
+                            },
+                            {
+                                "task": "Verify",
+                                "match": "https://localhost.emobix.co.uk:8443/test/a/test/callback*"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "oidcc-max-age-1": {
+                "browser": [
+                    {
+                        "match": "https://localhost:9443/oauth2/authorize*",
+                        "tasks": [
+                            {
+                                "task": "Login",
+                                "match": "https://localhost:9443/authenticationendpoint/login*",
+                                "optional": True,
+                                "commands": [
+                                    [
+                                        "wait",
+                                        "xpath",
+                                        "/html/body/main/div/div[2]/h3",
+                                        10,
+                                        "Sign In",
+                                        "update-image-placeholder-optional"
+                                    ],
+                                    [
+                                        "text",
+                                        "id",
+                                        "usernameUserInput",
+                                        "admin"
+                                    ],
+                                    [
+                                        "text",
+                                        "id",
+                                        "password",
+                                        "admin"
+                                    ],
+                                    [
+                                        "click",
+                                        "xpath",
+                                        "/html/body/main/div/div[2]/div/form/div[9]/div[2]/button"
+                                    ],
+                                    [
+                                        "wait",
+                                        "contains",
+                                        "test/callback",
+                                        10
+                                    ]
+                                ]
+                            },
+                            {
+                                "task": "Consent",
+                                "match": "https://localhost:9443/authenticationendpoint/oauth2_consent*",
+                                "optional": True,
+                                "commands": [
+                                    [
+                                        "wait",
+                                        "id",
+                                        "approve",
+                                        10
+                                    ],
+                                    [
+                                        "click",
+                                        "id",
+                                        "rememberApproval",
+                                        "optional"
+                                    ],
+                                    [
+                                        "click",
+                                        "id",
+                                        "approve"
+                                    ],
+                                    [
+                                        "wait",
+                                        "contains",
+                                        "callback",
+                                        10
+                                    ]
+                                ]
+                            },
+                            {
+                                "task": "Verify",
+                                "match": "https://localhost.emobix.co.uk:8443/test/a/test/callback*"
                             }
                         ]
                     }
