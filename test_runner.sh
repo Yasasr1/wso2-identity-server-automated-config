@@ -9,11 +9,11 @@ echo "Basic certification test plan"
 echo "-----------------------------"
 echo
 sudo python3 ./conformance-suite/scripts/run-test-plan.py oidcc-basic-certification-test-plan[server_metadata=static][client_registration=static_client] ./IS_config.json 2>&1 | tee basic-certification-test-plan-log.txt
-#echo
-#echo "Implicit certification test plan"
-#echo "-----------------------------"
-#echo
-#sudo python3 ./conformance-suite/scripts/run-test-plan.py oidcc-implicit-certification-test-plan[server_metadata=static][client_registration=static_client] ./IS_config.json 2>&1 | tee implicit-certification-test-plan-log.txt
+echo
+echo "Implicit certification test plan"
+echo "-----------------------------"
+echo
+sudo python3 ./conformance-suite/scripts/run-test-plan.py oidcc-implicit-certification-test-plan[server_metadata=static][client_registration=static_client] ./IS_config.json 2>&1 | tee implicit-certification-test-plan-log.txt
 #echo
 #echo "Hybrid certification test plan"
 #echo "-----------------------------"
