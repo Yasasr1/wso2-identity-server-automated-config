@@ -1,6 +1,6 @@
 #!/bin/bash +x
 CONFORMANCE_SUITE_URL=https://localhost:8443
-IS_FAILED=false
+IS_SUCCESSFUL=false
 echo "========================"
 echo "Running Tests"
 echo "========================"
@@ -37,12 +37,12 @@ sudo python3 ./conformance-suite/scripts/run-test-plan.py oidcc-basic-certificat
 echo
 if sudo python3 ./wso2-identity-server-automated-config/export_results.py $CONFORMANCE_SUITE_URL
 then
-  IS_FAILED=true
+  IS_SUCCESSFUL=true
 fi
-echo $IS_FAILED
-if $IS_FAILED
+
+if $IS_SUCCESSFUL
 then
-  exit 1
+  exit 0
 else
-	exit 0
+	exit 1
 fi
