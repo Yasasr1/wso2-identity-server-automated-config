@@ -6,7 +6,6 @@ import sys
 
 # export test results of a given test plan
 def save_results(plan):
-    print("======================\nExporting test results\n======================")
     response = requests.get(url=sys.argv[1] + "/api/plan/exporthtml/" + plan['_id'], stream=True, verify=False)
     with open("./" + plan['_id'] + "_test_results.zip", 'wb') as fileDir:
         for chunk in response.iter_content(chunk_size=128):
@@ -26,7 +25,7 @@ def get_failed_tests(plan):
 failed_plan_details = dict()
 warnings.filterwarnings("ignore")
 plan_list = json.loads(requests.get(url=sys.argv[1] + "/api/plan?length=20", verify=False).content)
-print(plan_list)
+print("======================\nExporting test results\n======================")
 for test_plan in plan_list['data']:
     save_results(test_plan)
     failed_tests_list = get_failed_tests(test_plan)
