@@ -19,27 +19,27 @@ sudo python3 ./conformance-suite/scripts/run-test-plan.py oidcc-implicit-certifi
 #echo "-----------------------------"
 #echo
 #sudo python3 ./conformance-suite/scripts/run-test-plan.py oidcc-hybrid-certification-test-plan[server_metadata=static][client_registration=static_client] ./IS_config.json 2>&1 | tee hybrid-certification-test-plan-log.txt
-echo
-echo "Formpost basic certification test plan"
-echo "-----------------------------"
-echo
+#echo
+#echo "Formpost basic certification test plan"
+#echo "-----------------------------"
+#echo
 #sudo python3 ./conformance-suite/scripts/run-test-plan.py oidcc-formpost-basic-certification-test-plan[server_metadata=static][client_registration=static_client] ./IS_config.json 2>&1 | tee formpost-basic-certification-test-plan-log.txt
-echo
-echo "Formpost implicit certification test plan"
-echo "-----------------------------"
-echo
+#echo
+#echo "Formpost implicit certification test plan"
+#echo "-----------------------------"
+#echo
 #sudo python3 ./conformance-suite/scripts/run-test-plan.py oidcc-formpost-implicit-certification-test-plan[server_metadata=static][client_registration=static_client] ./IS_config.json 2>&1 | tee formpost-implicit-certification-test-plan-log.txt
-echo
-echo "Formpost hybrid certification test plan"
-echo "-----------------------------"
-echo
+#echo
+#echo "Formpost hybrid certification test plan"
+#echo "-----------------------------"
+#echo
 #sudo python3 ./conformance-suite/scripts/run-test-plan.py oidcc-formpost-hybrid-certification-test-plan[server_metadata=static][client_registration=static_client] ./IS_config.json 2>&1 | tee formpost-hybrid-certification-test-plan-log.txt
 echo
 if sudo python3 ./wso2-identity-server-automated-config/export_results.py $CONFORMANCE_SUITE_URL
 then
   IS_FAILED=true
 fi
-
+echo $IS_FAILED
 if $IS_FAILED
 then
   exit 1
