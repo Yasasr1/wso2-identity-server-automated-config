@@ -56,11 +56,3 @@ if failed_plan_details:
 else:
     print("\nAll test plans finished successfully")
     sys.exit(0)
-
-
-{
-    "test_name": {
-        'fails': [],
-        'warnings': []
-    }
-}
