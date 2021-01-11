@@ -8,24 +8,7 @@ from zipfile import ZipFile
 import subprocess
 import os
 import sys
-
-ALIAS = "test"
-DCR_ENDPOINT = "https://localhost:9443/api/identity/oauth2/dcr/v1.1/register"
-TOKEN_ENDPOINT = "https://localhost:9443/oauth2/token"
-DCR_CLIENT_ID = "oidc_test_clientid001"
-DCR_CLIENT_SECRET = "oidc_test_client_secret001"
-APPLICATION_ENDPOINT = "https://localhost:9443/api/server/v1/applications"
-SCOPES = "internal_user_mgt_update internal_application_mgt_create internal_application_mgt_view internal_login " \
-         "internal_claim_meta_update internal_application_mgt_update internal_scope_mgt_create"
-
-DCR_HEADERS = {'Content-Type': 'application/json', 'Connection': 'keep-alive',
-               'Authorization': 'Basic YWRtaW46YWRtaW4='}
-DCR_BODY = {
-    'client_name': 'python_script',
-    "grant_types": ["password"],
-    "ext_param_client_id": DCR_CLIENT_ID,
-    "ext_param_client_secret": DCR_CLIENT_SECRET
-}
+import constants
 
 headers = {
     'Content-Type': 'application/json',
@@ -35,8 +18,8 @@ headers = {
 
 
 def dcr():
-    print("DCR")
-    response = requests.post(url=DCR_ENDPOINT, headers=DCR_HEADERS, data=json.dumps(DCR_BODY), verify=False)
+    print("Dynamic Client Registration")
+    response = requests.post(url=constants.DCR_ENDPOINT, headers=constants.DCR_HEADERS, data=json.dumps(constants.DCR_BODY), verify=False)
     print(response.status_code)
 
 
@@ -64,7 +47,7 @@ def get_access_token(client_id, client_secret, scope, url):
 
 
 def get_service_provider_details(application_id):
-    response = json.loads(requests.get(url=APPLICATION_ENDPOINT + "/" + application_id + "/inbound-protocols/oidc",
+    response = json.loads(requests.get(url=constants.APPLICATION_ENDPOINT + "/" + application_id + "/inbound-protocols/oidc",
                                        headers=headers, verify=False).content)
     return {"clientId": response['clientId'], "clientSecret": response['clientSecret'], "applicationId": application_id}
 
@@ -114,12 +97,12 @@ def register_service_provider(name, callback_url):
 
     print("Registering service provider " + name)
     json_body = json.dumps(body)
-    response = requests.post(url=APPLICATION_ENDPOINT, headers=headers, data=json_body, verify=False)
+    response = requests.post(url=constants.APPLICATION_ENDPOINT, headers=headers, data=json_body, verify=False)
     if response.content and json.loads(response.content)['code'] == "APP-65001":
         print("Application already registered, getting details")
     else:
         print("Service provider " + name + " registered")
-    response = requests.get(url=APPLICATION_ENDPOINT + "?filter=name+eq+" + name, headers=headers, verify=False)
+    response = requests.get(url=constants.APPLICATION_ENDPOINT + "?filter=name+eq+" + name, headers=headers, verify=False)
     print(response.status_code)
     response_map = json.loads(response.content)
     print(response_map)
@@ -392,7 +375,7 @@ def add_claim_service_provider(application_id):
 
     print("Adding claims to service provider")
     json_body = json.dumps(body)
-    response = requests.patch(url=APPLICATION_ENDPOINT + "/" + application_id, headers=headers, data=json_body,
+    response = requests.patch(url=constants.APPLICATION_ENDPOINT + "/" + application_id, headers=headers, data=json_body,
                               verify=False)
     print(response.status_code)
     print(response.text)
@@ -427,7 +410,7 @@ def configure_acr(application_id):
     }
     print("Setup advanced authentication scripts")
     json_body = json.dumps(body)
-    response = requests.patch(url=APPLICATION_ENDPOINT + "/" + application_id, headers=headers, data=json_body,
+    response = requests.patch(url=constants.APPLICATION_ENDPOINT + "/" + application_id, headers=headers, data=json_body,
                               verify=False)
     print(response.status_code)
     print(response.text)
@@ -478,7 +461,7 @@ def unpack_and_run(zip_file_name):
 
 def json_config_builder(service_provider_1, service_provider_2):
     config = {
-        "alias": ALIAS,
+        "alias": constants.ALIAS,
         "server": {
             "issuer": "https://localhost:9443/oauth2/token",
             "jwks_uri": "https://localhost:9443/oauth2/jwks",
@@ -876,14 +859,14 @@ else:
 
 dcr()
 
-access_token = get_access_token(DCR_CLIENT_ID, DCR_CLIENT_SECRET, SCOPES, TOKEN_ENDPOINT)
+access_token = get_access_token(constants.DCR_CLIENT_ID, constants.DCR_CLIENT_SECRET, constants.SCOPES, constants.TOKEN_ENDPOINT)
 headers['Authorization'] = "Bearer " + access_token
 
 service_provider_1 = register_service_provider("okfinal1",
-                                               "https://localhost.emobix.co.uk:8443/test/a/" + ALIAS + "/callback")
+                                               "https://localhost.emobix.co.uk:8443/test/a/" + constants.ALIAS + "/callback")
 print(service_provider_1)
 service_provider_2 = register_service_provider("okfinal2",
-                                               "https://localhost.emobix.co.uk:8443/test/a/" + ALIAS + "/callback")
+                                               "https://localhost.emobix.co.uk:8443/test/a/" + constants.ALIAS + "/callback")
 print(service_provider_2)
 
 set_user_claim_values()
