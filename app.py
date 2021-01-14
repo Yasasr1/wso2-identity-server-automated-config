@@ -19,7 +19,8 @@ headers = {
 
 def dcr():
     print("Dynamic Client Registration")
-    response = requests.post(url=constants.DCR_ENDPOINT, headers=constants.DCR_HEADERS, data=json.dumps(constants.DCR_BODY), verify=False)
+    response = requests.post(url=constants.DCR_ENDPOINT, headers=constants.DCR_HEADERS,
+                             data=json.dumps(constants.DCR_BODY), verify=False)
     print(response.status_code)
 
 
@@ -47,8 +48,9 @@ def get_access_token(client_id, client_secret, scope, url):
 
 
 def get_service_provider_details(application_id):
-    response = json.loads(requests.get(url=constants.APPLICATION_ENDPOINT + "/" + application_id + "/inbound-protocols/oidc",
-                                       headers=headers, verify=False).content)
+    response = json.loads(
+        requests.get(url=constants.APPLICATION_ENDPOINT + "/" + application_id + "/inbound-protocols/oidc",
+                     headers=headers, verify=False).content)
     return {"clientId": response['clientId'], "clientSecret": response['clientSecret'], "applicationId": application_id}
 
 
@@ -58,12 +60,14 @@ def register_service_provider(config_file_path):
     name = body["name"]
 
     print("Registering service provider " + name)
-    response = requests.post(url=constants.APPLICATION_ENDPOINT, headers=headers, data=body, verify=False)
+    response = requests.post(url=constants.APPLICATION_ENDPOINT, headers=headers, data=json.dumps(body), verify=False)
+    print(response.content)
     if response.content and json.loads(response.content)['code'] == "APP-65001":
         print("Application already registered, getting details")
     else:
         print("Service provider " + name + " registered")
-    response = requests.get(url=constants.APPLICATION_ENDPOINT + "?filter=name+eq+" + name, headers=headers, verify=False)
+    response = requests.get(url=constants.APPLICATION_ENDPOINT + "?filter=name+eq+" + name, headers=headers,
+                            verify=False)
     print(response.status_code)
     response_map = json.loads(response.content)
     print(response_map)
@@ -73,124 +77,14 @@ def register_service_provider(config_file_path):
         return get_service_provider_details(response_map['applications'][0]['id'])
 
 
-def set_user_claim_values():
+def set_user_claim_values(config_file_path):
     # can't update these values -
     #   middle name
-
-    body = {
-        "Operations": [
-            {
-                "op": "replace",
-                "value": {
-                    "profileUrl": "newUrl"
-                }
-            },
-            {
-                "op": "replace",
-                "value": {
-                    "locale": "locale"
-                }
-            },
-            {
-                "op": "replace",
-                "value": {
-                    "photos": [
-                        "photos",
-                        {
-                            "type": "photo",
-                            "value": "photourl"
-                        }
-                    ]
-                }
-            },
-            {
-                "op": "replace",
-                "value": {
-                    "addresses": [
-                        "address"
-                    ]
-                }
-            },
-            {
-                "op": "replace",
-                "value": {
-                    "timezone": "+5:30"
-                }
-            },
-            {
-                "op": "replace",
-                "value": {
-                    "displayName": "displayu name"
-                }
-            },
-            {
-                "op": "replace",
-                "value": {
-                    "nickName": "nicj name"
-                }
-            },
-            {
-                "op": "replace",
-                "value": {
-                    "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
-                        "emailVerified": "true",
-                        "manager": {
-                            "value": "female"
-                        },
-                        "phoneVerified": "true",
-                        "dateOfBirth": "1997-11-26T05:09:15.680889Z",
-                        "organization": "organization2"
-                    }
-                }
-            },
-            {
-                "op": "replace",
-                "value": {
-                    "name": {
-                        "givenName": "yasas"
-                    }
-                }
-            },
-            {
-                "op": "replace",
-                "value": {
-                    "name": {
-                        "familyName": "Administrator"
-                    }
-                }
-            },
-            {
-                "op": "replace",
-                "value": {
-                    "emails": [
-                        "admin@wso2.com"
-                    ]
-                }
-            },
-            {
-                "op": "replace",
-                "value": {
-                    "phoneNumbers": [
-                        {
-                            "type": "mobile",
-                            "value": "07178394922"
-                        },
-                        {
-                            "type": "home",
-                            "value": "011571"
-                        }
-                    ]
-                }
-            },
-        ],
-        "schemas": [
-            "urn:ietf:params:scim:api:messages:2.0:PatchOp"
-        ]
-    }
+    with open(config_file_path) as file:
+        body = json.load(file)
 
     print("Setting user claim values")
-    json_body = json.dumps(body)
-    response = requests.patch(url="https://localhost:9443/scim2/Me", headers=headers, data=json_body, verify=False)
+    response = requests.patch(url="https://localhost:9443/scim2/Me", headers=headers, data=json.dumps(body), verify=False)
     print(response.status_code)
     print(response.text)
 
@@ -203,175 +97,23 @@ def change_local_claim_mapping(body, url):
     print(response.text)
 
 
-def add_claim_service_provider(application_id):
-    body = {
-        "claimConfiguration": {
-            "dialect": "LOCAL",
-            "requestedClaims": [
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/organization"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/emailaddress"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/identity/emailVerified"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/mobile"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/identity/phoneVerified"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/addresses"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/fullname"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/givenname"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/lastname"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/nickname"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/url"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/photourl"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/gender"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/dob"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/timeZone"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/local"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/displayName"
-                    },
-                    "mandatory": True
-                },
-                {
-                    "claim": {
-                        "uri": "http://wso2.org/claims/modified"
-                    },
-                    "mandatory": True
-                }
-            ],
-            "role": {
-                "claim": {
-                    "uri": "http://wso2.org/claims/role"
-                },
-                "includeUserDomain": True
-            },
-            "subject": {
-                "claim": {
-                    "uri": "http://wso2.org/claims/username"
-                },
-                "includeTenantDomain": False,
-                "includeUserDomain": False,
-                "useMappedLocalSubject": False
-            }
-        }
-    }
+def add_claim_service_provider(application_id, config_file_path):
+    with open(config_file_path) as file:
+        body = json.load(file)
 
     print("Adding claims to service provider")
-    json_body = json.dumps(body)
-    response = requests.patch(url=constants.APPLICATION_ENDPOINT + "/" + application_id, headers=headers, data=json_body,
+    response = requests.patch(url=constants.APPLICATION_ENDPOINT + "/" + application_id, headers=headers, data=json.dumps(body),
                               verify=False)
     print(response.status_code)
     print(response.text)
 
 
-def configure_acr(application_id):
-    body = {
-        "authenticationSequence": {
-            "attributeStepId": 1,
-            "steps": [
-                {
-                    "id": 1,
-                    "options": [
-                        {
-                            "authenticator": "BasicAuthenticator",
-                            "idp": "LOCAL"
-                        }
-                    ]
-                }
-            ],
-            "subjectStepId": 1,
-            "type": "USER_DEFINED",
-            "script": "// Define conditional authentication by passing one or many Authentication Context Class "
-                      "References \n// as comma separated values.\n\n// Specify the ordered list of ACR "
-                      "here.\nvar supportedAcrValues = ['acr1'];\n\nvar onLoginRequest = function("
-                      "context) {\n    var selectedAcr = selectAcrFrom(context, supportedAcrValues);\n    Log.info("
-                      "'--------------- ACR selected: ' + selectedAcr);\n    context.selectedAcr = selectedAcr;\n   "
-                      " switch (selectedAcr) {\n        case supportedAcrValues[0] :\n            executeStep("
-                      "1);\n            break;\n        "
-                      "default :\n            executeStep(1);\n    }\n};"
-        }
-    }
+def configure_acr(application_id, config_file_path):
+    with open(config_file_path) as file:
+        body = json.load(file)
+
     print("Setup advanced authentication scripts")
-    json_body = json.dumps(body)
-    response = requests.patch(url=constants.APPLICATION_ENDPOINT + "/" + application_id, headers=headers, data=json_body,
+    response = requests.patch(url=constants.APPLICATION_ENDPOINT + "/" + application_id, headers=headers, data=json.dumps(body),
                               verify=False)
     print(response.status_code)
     print(response.text)
@@ -420,7 +162,7 @@ def unpack_and_run(zip_file_name):
         raise
 
 
-def json_config_builder(service_provider_1, service_provider_2, output_file_path):
+def json_config_builder(service_provider_1, service_provider_2, output_file_path, config_file_path):
     config = {
         "alias": constants.ALIAS,
         "server": {
@@ -443,471 +185,22 @@ def json_config_builder(service_provider_1, service_provider_2, output_file_path
             "client_id": service_provider_1['clientId'],
             "client_secret": service_provider_1['clientSecret']
         },
-        "browser": [
-            {
-                "match": "https://localhost:9443/oauth2/authorize*",
-                "tasks": [
-                    {
-                        "task": "Login",
-                        "match": "https://localhost:9443/authenticationendpoint/login*",
-                        "optional": True,
-                        "commands": [
-                            [
-                                "text",
-                                "id",
-                                "usernameUserInput",
-                                "admin"
-                            ],
-                            [
-                                "text",
-                                "id",
-                                "password",
-                                "admin"
-                            ],
-                            [
-                                "click",
-                                "xpath",
-                                "/html/body/main/div/div[2]/div/form/div[9]/div[2]/button"
-                            ],
-                            [
-                                "wait",
-                                "contains",
-                                "test/callback",
-                                10
-                            ]
-                        ]
-                    },
-                    {
-                        "task": "Verify",
-                        "match": "https://localhost.emobix.co.uk:8443/test/a/test/callback*"
-                    }
-                ]
-            }
-        ],
-        "override": {
-            "oidcc-server": {
-                "browser": [
-                    {
-                        "match": "https://localhost:9443/oauth2/authorize*",
-                        "tasks": [
-                            {
-                                "task": "Login",
-                                "match": "https://localhost:9443/authenticationendpoint/login*",
-                                "optional": True,
-                                "commands": [
-                                    [
-                                        "text",
-                                        "id",
-                                        "usernameUserInput",
-                                        "admin"
-                                    ],
-                                    [
-                                        "text",
-                                        "id",
-                                        "password",
-                                        "admin"
-                                    ],
-                                    [
-                                        "click",
-                                        "xpath",
-                                        "/html/body/main/div/div[2]/div/form/div[9]/div[2]/button"
-                                    ],
-                                    [
-                                        "wait",
-                                        "contains",
-                                        "oauth2_consent",
-                                        10
-                                    ]
-                                ]
-                            },
-                            {
-                                "task": "Consent",
-                                "match": "https://localhost:9443/authenticationendpoint/oauth2_consent*",
-                                "optional": True,
-                                "commands": [
-                                    [
-                                        "wait",
-                                        "id",
-                                        "approve",
-                                        10
-                                    ],
-                                    [
-                                        "click",
-                                        "id",
-                                        "rememberApproval"
-                                    ],
-                                    [
-                                        "click",
-                                        "id",
-                                        "approve"
-                                    ],
-                                    [
-                                        "wait",
-                                        "contains",
-                                        "callback",
-                                        10
-                                    ]
-                                ]
-                            },
-                            {
-                                "task": "Verify",
-                                "match": "https://localhost.emobix.co.uk:8443/test/a/test/callback*"
-                            }
-                        ]
-                    }
-                ]
-            },
-            "oidcc-ensure-request-with-valid-pkce-succeeds": {
-                "browser": [
-                    {
-                        "match": "https://localhost:9443/oauth2/authorize*",
-                        "tasks": [
-                            {
-                                "task": "Login",
-                                "match": "https://localhost:9443/authenticationendpoint/login*",
-                                "optional": True,
-                                "commands": [
-                                    [
-                                        "text",
-                                        "id",
-                                        "usernameUserInput",
-                                        "admin"
-                                    ],
-                                    [
-                                        "text",
-                                        "id",
-                                        "password",
-                                        "admin"
-                                    ],
-                                    [
-                                        "click",
-                                        "xpath",
-                                        "/html/body/main/div/div[2]/div/form/div[9]/div[2]/button"
-                                    ],
-                                    [
-                                        "wait",
-                                        "contains",
-                                        "oauth2_consent",
-                                        10
-                                    ]
-                                ]
-                            },
-                            {
-                                "task": "Consent",
-                                "match": "https://localhost:9443/authenticationendpoint/oauth2_consent*",
-                                "optional": True,
-                                "commands": [
-                                    [
-                                        "wait",
-                                        "id",
-                                        "approve",
-                                        10
-                                    ],
-                                    [
-                                        "click",
-                                        "id",
-                                        "approve"
-                                    ],
-                                    [
-                                        "wait",
-                                        "contains",
-                                        "callback",
-                                        10
-                                    ]
-                                ]
-                            },
-                            {
-                                "task": "Verify",
-                                "match": "https://localhost.emobix.co.uk:8443/test/a/test/callback*"
-                            }
-                        ]
-                    }
-                ]
-            },
-            "oidcc-refresh-token": {
-                "browser": [
-                    {
-                        "match": "https://localhost:9443/oauth2/authorize*",
-                        "tasks": [
-                            {
-                                "task": "Login",
-                                "match": "https://localhost:9443/authenticationendpoint/login*",
-                                "optional": True,
-                                "commands": [
-                                    [
-                                        "text",
-                                        "id",
-                                        "usernameUserInput",
-                                        "admin"
-                                    ],
-                                    [
-                                        "text",
-                                        "id",
-                                        "password",
-                                        "admin"
-                                    ],
-                                    [
-                                        "click",
-                                        "xpath",
-                                        "/html/body/main/div/div[2]/div/form/div[9]/div[2]/button"
-                                    ],
-                                    [
-                                        "wait",
-                                        "contains",
-                                        "oauth2_consent",
-                                        10
-                                    ]
-                                ]
-                            },
-                            {
-                                "task": "Consent",
-                                "match": "https://localhost:9443/authenticationendpoint/oauth2_consent*",
-                                "optional": True,
-                                "commands": [
-                                    [
-                                        "wait",
-                                        "id",
-                                        "approve",
-                                        10
-                                    ],
-                                    [
-                                        "click",
-                                        "id",
-                                        "approve"
-                                    ],
-                                    [
-                                        "wait",
-                                        "contains",
-                                        "callback",
-                                        10
-                                    ]
-                                ]
-                            },
-                            {
-                                "task": "Verify",
-                                "match": "https://localhost.emobix.co.uk:8443/test/a/test/callback*"
-                            }
-                        ]
-                    }
-                ]
-            },
-            "oidcc-ensure-registered-redirect-uri": {
-                "browser": [
-                    {
-                        "match": "https://localhost:9443/oauth2/authorize*",
-                        "tasks": [
-                            {
-                                "task": "Verify error page",
-                                "match": "https://localhost:9443/authenticationendpoint/oauth2_error.do*",
-                                "commands": [
-                                    [
-                                        "wait",
-                                        "xpath",
-                                        "//*",
-                                        10,
-                                        "Identity Server",
-                                        "update-image-placeholder"
-                                    ]
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            },
-            "oidcc-ensure-request-object-with-redirect-uri": {
-                "browser": [
-                    {
-                        "match": "https://localhost:9443/oauth2/authorize*",
-                        "tasks": [
-                            {
-                                "task": "Verify error",
-                                "match": "https://localhost:9443/authenticationendpoint/oauth2_error.do*",
-                                "commands": [
-                                    [
-                                        "wait",
-                                        "xpath",
-                                        "//*",
-                                        10,
-                                        "Identity Server",
-                                        "update-image-placeholder"
-                                    ]
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            },
-            "oidcc-prompt-login": {
-                "browser": [
-                    {
-                        "match": "https://localhost:9443/oauth2/authorize*",
-                        "tasks": [
-                            {
-                                "task": "Login",
-                                "match": "https://localhost:9443/authenticationendpoint/login*",
-                                "optional": True,
-                                "commands": [
-                                    [
-                                        "wait",
-                                        "xpath",
-                                        "/html/body/main/div/div[2]/h3",
-                                        10,
-                                        "Sign In",
-                                        "update-image-placeholder-optional"
-                                    ],
-                                    [
-                                        "text",
-                                        "id",
-                                        "usernameUserInput",
-                                        "admin"
-                                    ],
-                                    [
-                                        "text",
-                                        "id",
-                                        "password",
-                                        "admin"
-                                    ],
-                                    [
-                                        "click",
-                                        "xpath",
-                                        "/html/body/main/div/div[2]/div/form/div[9]/div[2]/button"
-                                    ],
-                                    [
-                                        "wait",
-                                        "contains",
-                                        "test/callback",
-                                        10
-                                    ]
-                                ]
-                            },
-                            {
-                                "task": "Consent",
-                                "match": "https://localhost:9443/authenticationendpoint/oauth2_consent*",
-                                "optional": True,
-                                "commands": [
-                                    [
-                                        "wait",
-                                        "id",
-                                        "approve",
-                                        10
-                                    ],
-                                    [
-                                        "click",
-                                        "id",
-                                        "rememberApproval",
-                                        "optional"
-                                    ],
-                                    [
-                                        "click",
-                                        "id",
-                                        "approve"
-                                    ],
-                                    [
-                                        "wait",
-                                        "contains",
-                                        "callback",
-                                        10
-                                    ]
-                                ]
-                            },
-                            {
-                                "task": "Verify",
-                                "match": "https://localhost.emobix.co.uk:8443/test/a/test/callback*"
-                            }
-                        ]
-                    }
-                ]
-            },
-            "oidcc-max-age-1": {
-                "browser": [
-                    {
-                        "match": "https://localhost:9443/oauth2/authorize*",
-                        "tasks": [
-                            {
-                                "task": "Login",
-                                "match": "https://localhost:9443/authenticationendpoint/login*",
-                                "optional": True,
-                                "commands": [
-                                    [
-                                        "wait",
-                                        "xpath",
-                                        "/html/body/main/div/div[2]/h3",
-                                        10,
-                                        "Sign In",
-                                        "update-image-placeholder-optional"
-                                    ],
-                                    [
-                                        "text",
-                                        "id",
-                                        "usernameUserInput",
-                                        "admin"
-                                    ],
-                                    [
-                                        "text",
-                                        "id",
-                                        "password",
-                                        "admin"
-                                    ],
-                                    [
-                                        "click",
-                                        "xpath",
-                                        "/html/body/main/div/div[2]/div/form/div[9]/div[2]/button"
-                                    ],
-                                    [
-                                        "wait",
-                                        "contains",
-                                        "test/callback",
-                                        10
-                                    ]
-                                ]
-                            },
-                            {
-                                "task": "Consent",
-                                "match": "https://localhost:9443/authenticationendpoint/oauth2_consent*",
-                                "optional": True,
-                                "commands": [
-                                    [
-                                        "wait",
-                                        "id",
-                                        "approve",
-                                        10
-                                    ],
-                                    [
-                                        "click",
-                                        "id",
-                                        "rememberApproval",
-                                        "optional"
-                                    ],
-                                    [
-                                        "click",
-                                        "id",
-                                        "approve"
-                                    ],
-                                    [
-                                        "wait",
-                                        "contains",
-                                        "callback",
-                                        10
-                                    ]
-                                ]
-                            },
-                            {
-                                "task": "Verify",
-                                "match": "https://localhost.emobix.co.uk:8443/test/a/test/callback*"
-                            }
-                        ]
-                    }
-                ]
-            }
-        }
+        "browser": [],
+        "override": ''
     }
+
+    with open(config_file_path) as file:
+        browser_config = json.load(file)
+
+    config["browser"] = browser_config["browser"]
+    config["override"] = browser_config["override"]
     json_config = json.dumps(config, indent=4)
     f = open(output_file_path, "w")
     f.write(json_config)
     f.close()
 
 
-def is_process_running(processName):
+def is_process_running(process_name):
     process_list = []
 
     # Iterate over the all the running process
@@ -915,7 +208,7 @@ def is_process_running(processName):
         try:
             pinfo = proc.as_dict(attrs=['pid', 'name', 'create_time'])
             # Check if process name contains the given name string.
-            if processName.lower() in pinfo['name'].lower():
+            if process_name.lower() in pinfo['name'].lower():
                 process_list.append(pinfo)
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
@@ -926,19 +219,19 @@ def is_process_running(processName):
         return False
 
 
-def generate_config_for_plan(service_provider1_config, service_provider2_config, output_file_path):
+def generate_config_for_plan(service_provider1_config, service_provider2_config, output_file_path, browser_config):
     service_provider_1 = register_service_provider(service_provider1_config)
     service_provider_2 = register_service_provider(service_provider2_config)
     print(service_provider_1)
     print(service_provider_2)
 
-    add_claim_service_provider(service_provider_1['applicationId'])
-    add_claim_service_provider(service_provider_2['applicationId'])
+    add_claim_service_provider(service_provider_1['applicationId'], "./config/service_provider_claim_config.json")
+    add_claim_service_provider(service_provider_2['applicationId'], "./config/service_provider_claim_config.json")
 
-    configure_acr(service_provider_1['applicationId'])
-    configure_acr(service_provider_2['applicationId'])
+    configure_acr(service_provider_1['applicationId'], "./config/acr_config.json")
+    configure_acr(service_provider_2['applicationId'], "./config/acr_config.json")
 
-    json_config_builder(service_provider_1, service_provider_2, output_file_path)
+    json_config_builder(service_provider_1, service_provider_2, output_file_path, browser_config)
 
 
 warnings.filterwarnings("ignore")
@@ -950,10 +243,11 @@ else:
 
 dcr()
 
-access_token = get_access_token(constants.DCR_CLIENT_ID, constants.DCR_CLIENT_SECRET, constants.SCOPES, constants.TOKEN_ENDPOINT)
+access_token = get_access_token(constants.DCR_CLIENT_ID, constants.DCR_CLIENT_SECRET, constants.SCOPES,
+                                 constants.TOKEN_ENDPOINT)
 headers['Authorization'] = "Bearer " + access_token
 
-set_user_claim_values()
+set_user_claim_values("./config/user_claim_value_config.json")
 
 # change phone number to mobile
 change_local_claim_mapping(
@@ -979,11 +273,25 @@ edit_scope("openid", {
     "displayName": "openid"
 })
 
-generate_config_for_plan("./Basic_test_plan/config/service_provider1_config.json", "./Basic_test_plan/config/service_provider2_config.json", "./Basic_test_plan/IS_config_basic.json")
-generate_config_for_plan("./Implicit_test_plan/config/service_provider1_config.json", "./Implicit_test_plan/config/service_provider2_config.json", "./Implicit_test_plan/IS_config_implicit.json")
-generate_config_for_plan("./Hybrid_test_plan/config/service_provider1_config.json", "./Hybrid_test_plan/config/service_provider2_config.json", "./Hybrid_test_plan/IS_config_hybrid.json")
-generate_config_for_plan("./Formpost_basic_test_plan/config/service_provider1_config.json", "./Formpost_basic_test_plan/config/service_provider2_config.json", "./Formpost_basic_test_plan/IS_config_formpost_basic.json")
-generate_config_for_plan("./Formpost_implicit_test_plan/config/service_provider1_config.json", "./Formpost_implicit_test_plan/config/service_provider2_config.json", "./Formpost_implicit_test_plan/IS_config_formpost_implicit.json")
-generate_config_for_plan("./Formpost_hybrid_test_plan/config/service_provider1_config.json", "./Formpost_hybrid_test_plan/config/service_provider2_config.json", "./Formpost_hybrid_test_plan/IS_config_formpost_hybrid.json")
-
-
+generate_config_for_plan("./Basic_test_plan/config/service_provider1_config.json",
+                         "./Basic_test_plan/config/service_provider2_config.json",
+                         "./Basic_test_plan/IS_config_basic.json", "./Basic_test_plan/config/browser_config.json")
+generate_config_for_plan("./Implicit_test_plan/config/service_provider1_config.json",
+                         "./Implicit_test_plan/config/service_provider2_config.json",
+                         "./Implicit_test_plan/IS_config_implicit.json",
+                         "./Implicit_test_plan/config/browser_config.json")
+generate_config_for_plan("./Hybrid_test_plan/config/service_provider1_config.json",
+                         "./Hybrid_test_plan/config/service_provider2_config.json",
+                         "./Hybrid_test_plan/IS_config_hybrid.json", "./Hybrid_test_plan/config/browser_config.json")
+generate_config_for_plan("./Formpost_basic_test_plan/config/service_provider1_config.json",
+                         "./Formpost_basic_test_plan/config/service_provider2_config.json",
+                         "./Formpost_basic_test_plan/IS_config_formpost_basic.json",
+                         "./Formpost_basic_test_plan/config/browser_config.json")
+generate_config_for_plan("./Formpost_implicit_test_plan/config/service_provider1_config.json",
+                         "./Formpost_implicit_test_plan/config/service_provider2_config.json",
+                         "./Formpost_implicit_test_plan/IS_config_formpost_implicit.json",
+                         "./Formpost_implicit_test_plan/config/browser_config.json")
+generate_config_for_plan("./Formpost_hybrid_test_plan/config/service_provider1_config.json",
+                         "./Formpost_hybrid_test_plan/config/service_provider2_config.json",
+                         "./Formpost_hybrid_test_plan/IS_config_formpost_hybrid.json",
+                         "./Formpost_hybrid_test_plan/config/browser_config.json")
