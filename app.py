@@ -52,52 +52,13 @@ def get_service_provider_details(application_id):
     return {"clientId": response['clientId'], "clientSecret": response['clientSecret'], "applicationId": application_id}
 
 
-def register_service_provider(name, callback_url):
-    body = {
-        "name": name,
-        "inboundProtocolConfiguration": {
-            "oidc": {
-                "state": "ACTIVE",
-                "grantTypes": [
-                    "authorization_code",
-                    "implicit",
-                    "refresh_token"
-                ],
-                "publicClient": False,
-                "validateRequestObjectSignature": False,
-                "callbackURLs": [
-                    callback_url
-                ],
-                "allowedOrigins": []
-            }
-        },
-        "authenticationSequence": {
-            "type": "DEFAULT",
-            "steps": [
-                {
-                    "id": 1,
-                    "options": [
-                        {
-                            "idp": "LOCAL",
-                            "authenticator": "basic"
-                        }
-                    ]
-                }
-            ],
-            "subjectStepId": 1,
-            "attributeStepId": 1
-        },
-        "advancedConfigurations": {
-            "discoverableByEndUsers": False,
-            "skipLoginConsent": True
-        },
-        "description": "client to be used by OIDC conformance suite.",
-        "templateId": "b9c5e11e-fc78-484b-9bec-015d247561b8"
-    }
+def register_service_provider(config_file_path):
+    with open(config_file_path) as file:
+        body = json.load(file)
+    name = body["name"]
 
     print("Registering service provider " + name)
-    json_body = json.dumps(body)
-    response = requests.post(url=constants.APPLICATION_ENDPOINT, headers=headers, data=json_body, verify=False)
+    response = requests.post(url=constants.APPLICATION_ENDPOINT, headers=headers, data=body, verify=False)
     if response.content and json.loads(response.content)['code'] == "APP-65001":
         print("Application already registered, getting details")
     else:
@@ -459,7 +420,7 @@ def unpack_and_run(zip_file_name):
         raise
 
 
-def json_config_builder(service_provider_1, service_provider_2):
+def json_config_builder(service_provider_1, service_provider_2, output_file_path):
     config = {
         "alias": constants.ALIAS,
         "server": {
@@ -517,30 +478,6 @@ def json_config_builder(service_provider_1, service_provider_2):
                         ]
                     },
                     {
-                        "task": "Consent",
-                        "match": "https://localhost:9443/authenticationendpoint/oauth2_consent*",
-                        "optional": True,
-                        "commands": [
-                            [
-                                "wait",
-                                "id",
-                                "approve",
-                                10
-                            ],
-                            [
-                                "click",
-                                "id",
-                                "approve"
-                            ],
-                            [
-                                "wait",
-                                "contains",
-                                "test/callback",
-                                10
-                            ]
-                        ]
-                    },
-                    {
                         "task": "Verify",
                         "match": "https://localhost.emobix.co.uk:8443/test/a/test/callback*"
                     }
@@ -548,6 +485,145 @@ def json_config_builder(service_provider_1, service_provider_2):
             }
         ],
         "override": {
+            "oidcc-server": {
+                "browser": [
+                    {
+                        "match": "https://localhost:9443/oauth2/authorize*",
+                        "tasks": [
+                            {
+                                "task": "Login",
+                                "match": "https://localhost:9443/authenticationendpoint/login*",
+                                "optional": True,
+                                "commands": [
+                                    [
+                                        "text",
+                                        "id",
+                                        "usernameUserInput",
+                                        "admin"
+                                    ],
+                                    [
+                                        "text",
+                                        "id",
+                                        "password",
+                                        "admin"
+                                    ],
+                                    [
+                                        "click",
+                                        "xpath",
+                                        "/html/body/main/div/div[2]/div/form/div[9]/div[2]/button"
+                                    ],
+                                    [
+                                        "wait",
+                                        "contains",
+                                        "oauth2_consent",
+                                        10
+                                    ]
+                                ]
+                            },
+                            {
+                                "task": "Consent",
+                                "match": "https://localhost:9443/authenticationendpoint/oauth2_consent*",
+                                "optional": True,
+                                "commands": [
+                                    [
+                                        "wait",
+                                        "id",
+                                        "approve",
+                                        10
+                                    ],
+                                    [
+                                        "click",
+                                        "id",
+                                        "rememberApproval"
+                                    ],
+                                    [
+                                        "click",
+                                        "id",
+                                        "approve"
+                                    ],
+                                    [
+                                        "wait",
+                                        "contains",
+                                        "callback",
+                                        10
+                                    ]
+                                ]
+                            },
+                            {
+                                "task": "Verify",
+                                "match": "https://localhost.emobix.co.uk:8443/test/a/test/callback*"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "oidcc-ensure-request-with-valid-pkce-succeeds": {
+                "browser": [
+                    {
+                        "match": "https://localhost:9443/oauth2/authorize*",
+                        "tasks": [
+                            {
+                                "task": "Login",
+                                "match": "https://localhost:9443/authenticationendpoint/login*",
+                                "optional": True,
+                                "commands": [
+                                    [
+                                        "text",
+                                        "id",
+                                        "usernameUserInput",
+                                        "admin"
+                                    ],
+                                    [
+                                        "text",
+                                        "id",
+                                        "password",
+                                        "admin"
+                                    ],
+                                    [
+                                        "click",
+                                        "xpath",
+                                        "/html/body/main/div/div[2]/div/form/div[9]/div[2]/button"
+                                    ],
+                                    [
+                                        "wait",
+                                        "contains",
+                                        "oauth2_consent",
+                                        10
+                                    ]
+                                ]
+                            },
+                            {
+                                "task": "Consent",
+                                "match": "https://localhost:9443/authenticationendpoint/oauth2_consent*",
+                                "optional": True,
+                                "commands": [
+                                    [
+                                        "wait",
+                                        "id",
+                                        "approve",
+                                        10
+                                    ],
+                                    [
+                                        "click",
+                                        "id",
+                                        "approve"
+                                    ],
+                                    [
+                                        "wait",
+                                        "contains",
+                                        "callback",
+                                        10
+                                    ]
+                                ]
+                            },
+                            {
+                                "task": "Verify",
+                                "match": "https://localhost.emobix.co.uk:8443/test/a/test/callback*"
+                            }
+                        ]
+                    }
+                ]
+            },
             "oidcc-refresh-token": {
                 "browser": [
                     {
@@ -826,7 +902,7 @@ def json_config_builder(service_provider_1, service_provider_2):
         }
     }
     json_config = json.dumps(config, indent=4)
-    f = open("IS_config.json", "w")
+    f = open(output_file_path, "w")
     f.write(json_config)
     f.close()
 
@@ -850,6 +926,21 @@ def is_process_running(processName):
         return False
 
 
+def generate_config_for_plan(service_provider1_config, service_provider2_config, output_file_path):
+    service_provider_1 = register_service_provider(service_provider1_config)
+    service_provider_2 = register_service_provider(service_provider2_config)
+    print(service_provider_1)
+    print(service_provider_2)
+
+    add_claim_service_provider(service_provider_1['applicationId'])
+    add_claim_service_provider(service_provider_2['applicationId'])
+
+    configure_acr(service_provider_1['applicationId'])
+    configure_acr(service_provider_2['applicationId'])
+
+    json_config_builder(service_provider_1, service_provider_2, output_file_path)
+
+
 warnings.filterwarnings("ignore")
 
 if not is_process_running("wso2server"):
@@ -861,13 +952,6 @@ dcr()
 
 access_token = get_access_token(constants.DCR_CLIENT_ID, constants.DCR_CLIENT_SECRET, constants.SCOPES, constants.TOKEN_ENDPOINT)
 headers['Authorization'] = "Bearer " + access_token
-
-service_provider_1 = register_service_provider("okfinal1",
-                                               "https://localhost.emobix.co.uk:8443/test/a/" + constants.ALIAS + "/callback")
-print(service_provider_1)
-service_provider_2 = register_service_provider("okfinal2",
-                                               "https://localhost.emobix.co.uk:8443/test/a/" + constants.ALIAS + "/callback")
-print(service_provider_2)
 
 set_user_claim_values()
 
@@ -887,12 +971,6 @@ change_local_claim_mapping(
     },
     "https://localhost:9443/api/server/v1/claim-dialects/aHR0cDovL3dzbzIub3JnL29pZGMvY2xhaW0/claims/d2Vic2l0ZQ")
 
-add_claim_service_provider(service_provider_1['applicationId'])
-add_claim_service_provider(service_provider_2['applicationId'])
-
-configure_acr(service_provider_1['applicationId'])
-configure_acr(service_provider_2['applicationId'])
-
 edit_scope("openid", {
     "claims": [
         "sub"
@@ -901,4 +979,11 @@ edit_scope("openid", {
     "displayName": "openid"
 })
 
-json_config_builder(service_provider_1, service_provider_2)
+generate_config_for_plan("./Basic_test_plan/config/service_provider1_config.json", "./Basic_test_plan/config/service_provider2_config.json", "./Basic_test_plan/IS_config_basic.json")
+generate_config_for_plan("./Implicit_test_plan/config/service_provider1_config.json", "./Implicit_test_plan/config/service_provider2_config.json", "./Implicit_test_plan/IS_config_implicit.json")
+generate_config_for_plan("./Hybrid_test_plan/config/service_provider1_config.json", "./Hybrid_test_plan/config/service_provider2_config.json", "./Hybrid_test_plan/IS_config_hybrid.json")
+generate_config_for_plan("./Formpost_basic_test_plan/config/service_provider1_config.json", "./Formpost_basic_test_plan/config/service_provider2_config.json", "./Formpost_basic_test_plan/IS_config_formpost_basic.json")
+generate_config_for_plan("./Formpost_implicit_test_plan/config/service_provider1_config.json", "./Formpost_implicit_test_plan/config/service_provider2_config.json", "./Formpost_implicit_test_plan/IS_config_formpost_implicit.json")
+generate_config_for_plan("./Formpost_hybrid_test_plan/config/service_provider1_config.json", "./Formpost_hybrid_test_plan/config/service_provider2_config.json", "./Formpost_hybrid_test_plan/IS_config_formpost_hybrid.json")
+
+
