@@ -13,12 +13,12 @@ echo
 echo "Implicit certification test plan"
 echo "-----------------------------"
 echo
-sudo python3 ./conformance-suite/scripts/run-test-plan.py oidcc-implicit-certification-test-plan[server_metadata=static][client_registration=static_client] ./wso2-identity-server-automated-config/Implicit_test_plan/IS_config_implicit.json 2>&1 | tee implicit-certification-test-plan-log.txt
+#sudo python3 ./conformance-suite/scripts/run-test-plan.py oidcc-implicit-certification-test-plan[server_metadata=static][client_registration=static_client] ./wso2-identity-server-automated-config/Implicit_test_plan/IS_config_implicit.json 2>&1 | tee implicit-certification-test-plan-log.txt
 echo
 echo "Hybrid certification test plan"
 echo "-----------------------------"
 echo
-sudo python3 ./conformance-suite/scripts/run-test-plan.py oidcc-hybrid-certification-test-plan[server_metadata=static][client_registration=static_client] ./wso2-identity-server-automated-config/Hybrid_test_plan/IS_config_hybrid.json 2>&1 | tee hybrid-certification-test-plan-log.txt
+#sudo python3 ./conformance-suite/scripts/run-test-plan.py oidcc-hybrid-certification-test-plan[server_metadata=static][client_registration=static_client] ./wso2-identity-server-automated-config/Hybrid_test_plan/IS_config_hybrid.json 2>&1 | tee hybrid-certification-test-plan-log.txt
 echo
 echo "Formpost basic certification test plan"
 echo "-----------------------------"
