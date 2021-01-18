@@ -2,6 +2,7 @@ import json
 import warnings
 import requests
 import sys
+import os
 
 
 # export test results of a given test plan
@@ -29,6 +30,8 @@ def get_failed_tests(plan):
 
 
 failed_plan_details = dict()
+failed_count = 0
+warnings_count = 0
 contains_fails = False
 warnings.filterwarnings("ignore")
 plan_list = json.loads(requests.get(url=sys.argv[1] + "/api/plan?length=50", verify=False).content)
@@ -36,10 +39,18 @@ print("======================\nExporting test results\n======================")
 for test_plan in plan_list['data']:
     save_results(test_plan)
     failed_tests_list = get_failed_tests(test_plan)
-    if len(failed_tests_list['fails']) > 0:
-        contains_fails = True
     if len(failed_tests_list['fails']) > 0 or len(failed_tests_list['warnings']) > 0:
         failed_plan_details[test_plan['planName']] = failed_tests_list
+        if len(failed_tests_list['fails']) > 0:
+            contains_fails = True
+            failed_count += len(failed_tests_list['fails'])
+        elif len(failed_tests_list['warnings']) > 0:
+            warnings_count += len(failed_tests_list['warnings'])
+
+# set environment variables to be used when sending test status to google chat
+os.environ['FAILED_TEST_COUNT'] = str(failed_count)
+os.environ['WARNING_TEST_COUNT'] = str(warnings_count)
+os.environ['TOTAL_TEST_COUNT'] = str(failed_count+warnings_count)
 
 if failed_plan_details:
     print("Following tests have fails/warnings\n===========================")
