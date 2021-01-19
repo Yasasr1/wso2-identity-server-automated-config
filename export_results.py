@@ -53,7 +53,7 @@ request_body = {
             ' \n Total test cases: ' + (failed_count+warnings_count) +
             ' \n Failed test cases: ' + failed_count +
             ' \n Test cases with warnings: ' + warnings_count +
-            ' \n https://github.com/'+sys.argv[4]+'/actions/runs/' + sys.argv[5]
+            ' \n https://github.com/'+str(sys.argv[4])+'/actions/runs/' + sys.argv[5]
 }
 response = requests.post(sys.argv[6], json=request_body)
 print(response.text)
