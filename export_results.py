@@ -17,21 +17,23 @@ def save_results(plan):
 def get_failed_tests(plan):
     test_fails = []
     test_warnings = []
+    test_others = []
     test_log = json.loads(requests.get(url=sys.argv[1] + "/api/log?length=100&search=" + plan['_id'], verify=False).content)
     for test in test_log['data']:
         if "result" in test and test['result'] == "FAILED":
             test_fails.append(test['testName'])
         elif "result" in test and test['result'] == "WARNING":
             test_warnings.append(test['testName'])
+        else:
+            test_others.append(test['testName'])
     return {
         'fails': test_fails,
-        'warnings': test_warnings
+        'warnings': test_warnings,
+        'others': test_others
     }
 
 
 failed_plan_details = dict()
-failed_count = 0
-warnings_count = 0
 contains_fails = False
 warnings.filterwarnings("ignore")
 plan_list = json.loads(requests.get(url=sys.argv[1] + "/api/plan?length=50", verify=False).content)
@@ -43,21 +45,6 @@ for test_plan in plan_list['data']:
         failed_plan_details[test_plan['planName']] = failed_tests_list
         if len(failed_tests_list['fails']) > 0:
             contains_fails = True
-            failed_count += len(failed_tests_list['fails'])
-        elif len(failed_tests_list['warnings']) > 0:
-            warnings_count += len(failed_tests_list['warnings'])
-
-# send google chat notification
-request_body = {
-    'text': 'Hi all, OIDC conformance test run #' + str(sys.argv[2]) + ' completed with status: '+sys.argv[3] +
-            ' \n Total test cases: ' + str(failed_count+warnings_count) +
-            ' \n Failed test cases: ' + str(failed_count) +
-            ' \n Test cases with warnings: ' + str(warnings_count) +
-            ' \n https://github.com/' + sys.argv[4] + '/actions/runs/' + str(sys.argv[5])
-}
-response = requests.post(sys.argv[6], json=request_body)
-print(response.text)
-
 
 if failed_plan_details:
     print("Following tests have fails/warnings\n===========================")
