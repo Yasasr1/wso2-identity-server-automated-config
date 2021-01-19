@@ -35,7 +35,13 @@ echo "-----------------------------"
 echo
 #sudo python3 ./conformance-suite/scripts/run-test-plan.py oidcc-formpost-hybrid-certification-test-plan[server_metadata=static][client_registration=static_client] ./wso2-identity-server-automated-config/Formpost_hybrid_test_plan/IS_config_formpost_hybrid.json 2>&1 | tee formpost-hybrid-certification-test-plan-log.txt
 echo
-if sudo python3 ./wso2-identity-server-automated-config/export_results.py $CONFORMANCE_SUITE_URL
+#1 - $GITHUB_RUN_NUMBER
+#2 - ${{job.status}}
+#3 - ${{github.repository}}
+#4 - ${{github.run_id}}
+#5 - ${{secrets.GOOGLE_WEBHOOK}}
+if sudo python3 ./wso2-identity-server-automated-config/export_results.py $CONFORMANCE_SUITE_URL $1 $2 $3 $4 $5
+
 then
   IS_SUCCESSFUL=true
 fi

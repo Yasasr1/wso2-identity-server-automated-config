@@ -47,10 +47,17 @@ for test_plan in plan_list['data']:
         elif len(failed_tests_list['warnings']) > 0:
             warnings_count += len(failed_tests_list['warnings'])
 
-# set environment variables to be used when sending test status to google chat
-os.environ['FAILED_TEST_COUNT'] = str(failed_count)
-os.environ['WARNING_TEST_COUNT'] = str(warnings_count)
-os.environ['TOTAL_TEST_COUNT'] = str(failed_count+warnings_count)
+# send google chat notification
+request_body = {
+    'text': 'Hi all, OIDC conformance test run #' + sys.argv[2] + ' completed with status: '+sys.argv[3] +
+            ' \n Total test cases: ' + (failed_count+warnings_count) +
+            ' \n Failed test cases: ' + failed_count +
+            ' \n Test cases with warnings: ' + warnings_count +
+            ' \n https://github.com/'+sys.argv[4]+'/actions/runs/' + sys.argv[5]
+}
+response = requests.post(sys.argv[6], json=request_body)
+print(response.text)
+
 
 if failed_plan_details:
     print("Following tests have fails/warnings\n===========================")
