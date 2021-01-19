@@ -23,7 +23,7 @@ for test_plan in plan_list['data']:
 # send google chat notification
 request_body = {
     'text': 'Hi all, OIDC conformance test run #' + str(sys.argv[2]) + ' completed with status: '+sys.argv[3] +
-            ' \n Total test cases: ' + str(failed_count+warnings_count) +
+            ' \n Total test cases: ' + str(total_tests_count) +
             ' \n Failed test cases: ' + str(failed_count) +
             ' \n Test cases with warnings: ' + str(warnings_count) +
             ' \n https://github.com/' + sys.argv[4] + '/actions/runs/' + str(sys.argv[5])
