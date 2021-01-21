@@ -22,5 +22,5 @@ def start(file):
         print(file + " not found")
         raise
 
-
+# takes OIDC conformance suite url as an argument
 start(sys.argv[1])

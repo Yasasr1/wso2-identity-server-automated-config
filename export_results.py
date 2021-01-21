@@ -12,7 +12,7 @@ def save_results(plan):
             fileDir.write(chunk)
 
 
-# return names of all failed tests of a given test plan
+# return names of all failed, warnings and other test cases of a given test plan
 def get_failed_tests(plan):
     test_fails = []
     test_warnings = []

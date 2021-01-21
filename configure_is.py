@@ -16,14 +16,14 @@ headers = {
     'Authorization': 'Bearer '
 }
 
-
+# use dcr to register a client
 def dcr():
     print("Dynamic Client Registration")
     response = requests.post(url=constants.DCR_ENDPOINT, headers=constants.DCR_HEADERS,
                              data=json.dumps(constants.DCR_BODY), verify=False)
     print(response.status_code)
 
-
+# obtain an access token with given client details and scope
 def get_access_token(client_id, client_secret, scope, url):
     body = {
         'grant_type': 'password',
@@ -47,6 +47,7 @@ def get_access_token(client_id, client_secret, scope, url):
         print("Error: No access token found")
 
 
+# returns service provider details with given application id
 def get_service_provider_details(application_id):
     response = json.loads(
         requests.get(url=constants.APPLICATION_ENDPOINT + "/" + application_id + "/inbound-protocols/oidc",
@@ -54,6 +55,7 @@ def get_service_provider_details(application_id):
     return {"clientId": response['clientId'], "clientSecret": response['clientSecret'], "applicationId": application_id}
 
 
+# register a service provider with given configuration
 def register_service_provider(config_file_path):
     with open(config_file_path) as file:
         body = json.load(file)
@@ -77,9 +79,8 @@ def register_service_provider(config_file_path):
         return get_service_provider_details(response_map['applications'][0]['id'])
 
 
+# set values for user claims using given config file
 def set_user_claim_values(config_file_path):
-    # can't update these values -
-    #   middle name
     with open(config_file_path) as file:
         body = json.load(file)
 
@@ -89,6 +90,7 @@ def set_user_claim_values(config_file_path):
     print(response.text)
 
 
+# change the local mapping of a given claim
 def change_local_claim_mapping(body, url):
     print("changing local claim mapping for " + body['claimURI'])
     json_body = json.dumps(body)
@@ -97,6 +99,7 @@ def change_local_claim_mapping(body, url):
     print(response.text)
 
 
+# add claims to the service provider with given id using given claims config file
 def add_claim_service_provider(application_id, config_file_path):
     with open(config_file_path) as file:
         body = json.load(file)
@@ -108,6 +111,7 @@ def add_claim_service_provider(application_id, config_file_path):
     print(response.text)
 
 
+# perform advanced authentication configuration for given service provider using given config file
 def configure_acr(application_id, config_file_path):
     with open(config_file_path) as file:
         body = json.load(file)
@@ -119,6 +123,7 @@ def configure_acr(application_id, config_file_path):
     print(response.text)
 
 
+# update the scope with given scope id
 def edit_scope(scope_id, body):
     print("Changing scope: " + scope_id)
     json_body = json.dumps(body)
@@ -127,7 +132,7 @@ def edit_scope(scope_id, body):
     print(response.status_code)
     print(response.text)
 
-
+# unpack product-is zip file and run
 def unpack_and_run(zip_file_name):
     try:
         # extract IS zip
@@ -162,6 +167,7 @@ def unpack_and_run(zip_file_name):
         raise
 
 
+# creates the IS_config.json file needed to run OIDC test plans and save in the given path
 def json_config_builder(service_provider_1, service_provider_2, output_file_path, config_file_path):
     config = {
         "alias": constants.ALIAS,
@@ -200,6 +206,7 @@ def json_config_builder(service_provider_1, service_provider_2, output_file_path
     f.close()
 
 
+# returns true if the process with given name is running
 def is_process_running(process_name):
     process_list = []
 
@@ -219,6 +226,7 @@ def is_process_running(process_name):
         return False
 
 
+# perform all configurations and generate config file for a single OIDC test plan
 def generate_config_for_plan(service_provider1_config, service_provider2_config, output_file_path, browser_config):
     service_provider_1 = register_service_provider(service_provider1_config)
     service_provider_2 = register_service_provider(service_provider2_config)
@@ -235,14 +243,13 @@ def generate_config_for_plan(service_provider1_config, service_provider2_config,
 
 
 warnings.filterwarnings("ignore")
-
 if not is_process_running("wso2server"):
     unpack_and_run(str(sys.argv[1]))
 else:
     print("IS already running")
 
-dcr()
 
+dcr()
 access_token = get_access_token(constants.DCR_CLIENT_ID, constants.DCR_CLIENT_SECRET, constants.SCOPES,
                                  constants.TOKEN_ENDPOINT)
 headers['Authorization'] = "Bearer " + access_token

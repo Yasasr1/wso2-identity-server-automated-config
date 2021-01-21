@@ -9,6 +9,7 @@ warnings_count = 0
 total_tests_count = 0
 warnings.filterwarnings("ignore")
 plan_list = json.loads(requests.get(url=sys.argv[1] + "/api/plan?length=50", verify=False).content)
+# loop through all test plans and count fails, warnings and total test cases
 for test_plan in plan_list['data']:
     failed_tests_list = export_results.get_failed_tests(test_plan)
     if len(failed_tests_list['fails']) > 0:
